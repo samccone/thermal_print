@@ -14,6 +14,6 @@ export function canvasDraw(canvas: HTMLCanvasElement) {
       return;
     }
     ctx.fillStyle = "black";
-    ctx.fillRect(e.layerX, e.layerY, 5, 5);
+    ctx.fillRect(e.layerX, e.layerY, 3, 3);
   };
 }

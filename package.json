@@ -3,6 +3,7 @@
     "@types/es6-promise": "^3.3.0",
     "@types/w3c-web-usb": "^1.0.0",
     "prettier": "^1.13.7",
+    "ts-loader": "^4.4.2",
     "webpack": "^4.15.1",
     "webpack-cli": "^3.0.8"
   },

@@ -1,6 +1,11 @@
 export const ESC = 0x1b;
 export const GS = 0x1d;
 export const LF = 0x0a;
+enum PrintModes {
+  EIGHT_DOT_DENSITY = 0,
+  TWENTY_FOUR_DOT_DENSITY = 33,
+}
+
 
 export async function setLineSpacing(device: USBDevice, dotSpacing: number) {
   await sendBytes(device, new Uint8Array([ESC, 0x33, dotSpacing]));
@@ -75,34 +80,46 @@ export async function setCharacterStyle(
   await sendBytes(device, new Uint8Array([ESC, 0x21, v]));
 }
 
-export async function printImage(device: USBDevice, imageData: number[][]) {
-  await setLineSpacing(device, 8);
-  for (let y = 0; y < imageData.length; y += 8) {
+export async function printImage(device: USBDevice, imageData: number[][], dpi: 8|24) {
+  await setLineSpacing(device, dpi);
+  const imageWidth = imageData[0].length;
+  const mode = dpi === 8 ? PrintModes.EIGHT_DOT_DENSITY : PrintModes.TWENTY_FOUR_DOT_DENSITY;
+
+  if (imageData.length % dpi != 0) {
+    throw new Error(`Image height must be divisible by ${dpi} currently is ${imageData.length}`);
+  }
+
+  for (let y = 0; y < imageData.length; y += dpi) {
     await sendBytes(
       device,
       new Uint8Array([
         ESC,
         0x2a,
-        0, // m
-        0xff & imageData[y].length, // nL
-        (0xff00 & imageData[y].length) >> 8 // nH,
+        mode,
+        (0x00ff & imageWidth), // nL low byte,
+        (0xff00 & imageWidth) >> 8, // nH height byte
       ])
     );
-    await sendBytes(device, verticalSliceImage(imageData, y));
+
+    await sendBytes(device, verticalSliceImage(imageData, imageWidth, y, dpi));
     await sendBytes(device, new Uint8Array([LF]));
   }
 
   await setLineSpacing(device, 30);
 }
 
-export function verticalSliceImage(img: number[][], yOffset: number = 0) {
-  const ret = new Uint8Array(img[yOffset].length).fill(0);
+export function verticalSliceImage(img: number[][], imageWidth: number, yOffset: number = 0, dpi: 8|24) {
+  const bytesPerSlice = dpi/8;
+  const ret = new Uint8Array(imageWidth * bytesPerSlice).fill(0);
 
-  for (let x = 0; x < img[yOffset].length; x++) {
-    for (let y = yOffset; y < yOffset + 8 && img[y] != null; y++) {
-      ret[x] |= img[y][x] ? 1 << (7 - (y - yOffset)) : 0;
+
+  for (let x = 0; x < imageWidth; x++) {
+    for (let byte = 0; byte < bytesPerSlice; byte++) {
+      for (let y = byte * 8 + yOffset; y < byte * 8 + 8 + yOffset; y++) {
+        const setBitValue = 1 << (7 - y % 8)
+        ret[x * bytesPerSlice + byte] |= img[y][x] ? setBitValue : 0;
+      }
     }
   }
-
   return ret;
 }

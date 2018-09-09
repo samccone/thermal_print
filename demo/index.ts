@@ -60,7 +60,7 @@ async function claimInterface(device: USBDevice) {
         }
       }
 
-      await printImage(d, imageData);
+      await printImage(d, imageData, 24);
     });
   }
 })();
