@@ -4,8 +4,7 @@ import { canvasDraw } from "./canvas_draw";
 const canvas = document.querySelector("canvas") as HTMLCanvasElement;
 canvasDraw(canvas);
 
-document.querySelector("#auth")!.addEventListener("click", e => {
-  navigator.usb
+document.querySelector("#auth")!.addEventListener("click", e => {  navigator.usb
     .requestDevice({
       filters: []
     })
@@ -64,3 +63,21 @@ async function claimInterface(device: USBDevice) {
     });
   }
 })();
+
+
+    document.querySelector("#print")!.addEventListener("click", async e => {
+      const ctx = canvas.getContext("2d")!;
+      const imageData: number[][] = [];
+      const canvasData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      for (let y = 0; y < canvas.height; y++) {
+        imageData.push([]);
+        for (let x = 0; x < canvas.width; x++) {
+          imageData[y][x] =
+            canvasData.data[y * (canvas.width * 4) + x * 4 + 3] === 0 ? 0 : 1;
+        }
+      }
+
+      await printImage({} as any, imageData, 24);
+    });
+
