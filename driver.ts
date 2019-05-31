@@ -37,20 +37,19 @@ export async function reverse(
 }
 
 /**
- * Select an endpoint from the currently selected device configuration by name
+ * Select an endpoint from the currently selected configuration by direction
  * 
- * @param name usually 'out' or 'in'
+ * @param direction 'out' or 'in'
  * @param device the connected USBDevice
  */
-function selectEndpoint(name: string, device: USBDevice) {
+function selectEndpoint(direction: 'out' | 'in', device: USBDevice) {
   const endpoint = device.configuration
     .interfaces[0]
     .alternate
-    .endpoints.filter(ep => ep.direction == name)
-    .shift()
+    .endpoints.find(ep => ep.direction == direction)
 
   if (endpoint == null)
-    throw new Error(`Endpoint ${name} not found in device interface.`)
+    throw new Error(`Endpoint ${direction} not found in device interface.`)
   return endpoint
 }
 
