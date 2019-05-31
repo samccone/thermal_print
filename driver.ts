@@ -42,7 +42,7 @@ export async function reverse(
  * @param direction 'out' or 'in'
  * @param device the connected USBDevice
  */
-function selectEndpoint(direction: 'out' | 'in', device: USBDevice) {
+function selectEndpoint(direction: "in"|"out", device: USBDevice) {
   const endpoint = device.configuration
     .interfaces[0]
     .alternate
