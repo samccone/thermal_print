@@ -36,13 +36,32 @@ export async function reverse(
   await sendText(device, "\x1DB" + enabled);
 }
 
+/**
+ * Select an endpoint from the currently selected configuration by direction
+ * 
+ * @param direction 'out' or 'in'
+ * @param device the connected USBDevice
+ */
+function selectEndpoint(direction: "in"|"out", device: USBDevice) {
+  const endpoint = device.configuration
+    .interfaces[0]
+    .alternate
+    .endpoints.find(ep => ep.direction == direction)
+
+  if (endpoint == null)
+    throw new Error(`Endpoint ${direction} not found in device interface.`)
+  return endpoint
+}
+
 export async function sendText(device: USBDevice, str: string) {
   const bytes = new Uint8Array(stringToBytes(str));
-  await device.transferOut(1, bytes);
+  const endpoint = selectEndpoint('out', device)
+  device.transferOut(endpoint.endpointNumber, bytes);
 }
 
 export async function sendBytes(device: USBDevice, bytes: Uint8Array) {
-  return await device.transferOut(1, bytes);
+  const endpoint = selectEndpoint('out', device)
+  return device.transferOut(endpoint.endpointNumber, bytes);
 }
 
 export async function setCharacterStyle(
